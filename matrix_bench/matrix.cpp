@@ -1,19 +1,11 @@
-/*
- * matrix.cpp
- */
 
 #include <stdexcept>
 #include "matrix.h"
+#include "cblas.h"
 
-#define EPS 1e-10
 
-using std::ostream;  using std::istream;  using std::endl;
-using std::domain_error;
 
-/* PUBLIC MEMBER FUNCTIONS
- ********************************/
-
-Matrix::Matrix(int rows, int cols) : rows_(rows), cols_(cols)
+Matrix::Matrix(int rows, int cols, int type) : rows_(rows), cols_(cols), mul_type(type)
 {
     allocSpace();
     for (int i = 0; i < rows_; ++i) {
@@ -23,7 +15,7 @@ Matrix::Matrix(int rows, int cols) : rows_(rows), cols_(cols)
     }
 }
 
-Matrix::Matrix() : rows_(1), cols_(1)
+Matrix::Matrix() : rows_(1), cols_(1), mul_type(1)
 {
     allocSpace();
     p[0][0] = 0;
@@ -37,7 +29,7 @@ Matrix::~Matrix()
     delete[] p;
 }
 
-Matrix::Matrix(const Matrix& m) : rows_(m.rows_), cols_(m.cols_)
+Matrix::Matrix(const Matrix& m) : rows_(m.rows_), cols_(m.cols_), mul_type(m.mul_type)
 {
     allocSpace();
     for (int i = 0; i < rows_; ++i) {
@@ -92,9 +84,46 @@ Matrix& Matrix::operator-=(const Matrix& m)
     return *this;
 }
 
+
+double* Matrix::set_mul(const Matrix& m) {
+   clock_t t1, t2;
+    float temps;
+  Matrix temp(m.rows_, m.cols_,m.mul_type);
+
+if (mul_type==0) {
+for (int i = 0; i < temp.rows_; ++i) {
+        for (int j = 0; j < temp.cols_; ++j) {
+            for (int k = 0; k < cols_; ++k) {
+                temp.p[i][j] += (p[i][k] * m.p[k][j]);
+            }
+        }
+    }
+    return temp.convertir();
+
+} else {
+
+   double * mat1;
+   double * mat2;
+   double * res_mat;
+   res_mat = (double *) malloc(rows_ *cols_ * sizeof(double) );
+   mat1=  convertir();
+   mat2=  temp.convertir();
+   t1 = clock();
+
+  cblas_dgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,rows_,rows_,rows_,1, mat1,rows_,mat2 ,rows_,0,res_mat,rows_);
+  t2 = clock();
+  temps = (float)(t2-t1)/CLOCKS_PER_SEC;
+  std::cout << "temps d'execution avec BLAS :  " << temps << '\n';
+return res_mat;
+}
+}
+
+
+
 Matrix& Matrix::operator*=(const Matrix& m)
 {
-    Matrix temp(rows_, m.cols_);
+
+    Matrix temp(rows_, m.cols_,m.mul_type);
     for (int i = 0; i < temp.rows_; ++i) {
         for (int j = 0; j < temp.cols_; ++j) {
             for (int k = 0; k < cols_; ++k) {
@@ -115,6 +144,20 @@ Matrix& Matrix::operator*=(double num)
     return *this;
 }
 
+double* Matrix::convertir() {
+  int i, j,k;
+  double *arr;
+  k=0;
+  arr = (double *) malloc(rows_* cols_ * sizeof(double) );
+
+  for ( i = 0; i < rows_;i++) {
+            for (j = 0; j < cols_; j++) {
+              arr[k] = p[i][j];
+              k++;
+            }
+  }
+  return arr;
+}
 
 void Matrix::allocSpace()
 {
