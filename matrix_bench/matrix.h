@@ -6,7 +6,7 @@
 
 class Matrix {
     public:
-        Matrix(int, int,int);
+        Matrix(int, int);
         Matrix();
         ~Matrix();
         Matrix(const Matrix&);
@@ -18,9 +18,11 @@ class Matrix {
         Matrix& operator-=(const Matrix&);
         Matrix& operator*=(const Matrix&);
         Matrix& operator*=(double);
-        double *set_mul(const Matrix&);
+        Matrix& mat_insert(int t, float pl);
+         void  display();
+        double *blas_mul( Matrix&);
     private:
-        int rows_, cols_, mul_type;
+        int rows_, cols_;
         double **p;
 
         void allocSpace();

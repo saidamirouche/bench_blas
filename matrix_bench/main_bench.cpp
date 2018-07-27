@@ -26,20 +26,19 @@ int main(int argc, char* argv[])
 
    res_mat = (double *) malloc( mrows * mcols * sizeof(double) );
 
-   Matrix m1(mrows,mcols,mat_type);
-   Matrix m2(mrows,mcols,mat_type);
-   Matrix res(mrows,mcols,mat_type);
-   m1 = insert(m1,type,mrows,mcols,p1);
-   m2 = insert(m2,type,mrows,mcols,p1);
+   Matrix m1(mrows,mcols);
+   Matrix m2(mrows,mcols);
+   Matrix res(mrows,mcols);
+   m1.mat_insert(mat_type,p1);
+   m2.mat_insert(mat_type,p1);
 
-   res_mat = m1.set_mul(m2);
-
-
-
-
-   t1 = clock();
+   if (type==0)
    res = m1*m2;
-   t2 = clock();
-   temps = (float)(t2-t1)/CLOCKS_PER_SEC;
-  std::cout << "temps d'execution en multiplication naif : " << temps << '\n';
+   else
+   res_mat = m1.blas_mul(m2);
+
+
+
+
+
 }
